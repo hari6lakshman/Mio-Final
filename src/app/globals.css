@@ -90,8 +90,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image: radial-gradient(circle at top, hsl(var(--primary) / 0.25), transparent 45%),
-                      radial-gradient(circle at bottom, hsl(var(--primary) / 0.1), transparent 40%);
+    background-image: radial-gradient(circle at top, hsl(var(--primary) / 0.35), transparent 45%),
+                      radial-gradient(circle at bottom, hsl(var(--primary) / 0.2), transparent 40%);
     background-attachment: fixed;
   }
 }
