@@ -38,10 +38,10 @@ const chatPrompt = ai.definePrompt({
 
 Here is the chat history so far:
 {{#each history}}
-  {{#if (eq role 'user')}}
-    User: {{{content}}}
+  {{#if (this.role === 'user')}}
+    User: {{{this.content}}}
   {{else}}
-    Mio: {{{content}}}
+    Mio: {{{this.content}}}
   {{/if}}
 {{/each}}
 
