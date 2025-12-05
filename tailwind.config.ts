@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Lato', 'sans-serif'],
+        body: ['Cormorant Garamond', 'serif'],
         headline: ['Cinzel', 'serif'],
         code: ['monospace'],
       },

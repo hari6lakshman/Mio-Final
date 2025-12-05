@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useActionState } from 'react';
+import React, { useEffect, useRef, useState, useActionState, useTransition } from 'react';
 import { getMioResponse, type FormState } from '@/app/actions';
 import { type Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -34,7 +34,7 @@ function SubmitButton() {
       type="submit"
       size="icon"
       disabled={pending}
-      className="absolute bottom-2 right-2 bg-primary/80 hover:bg-primary text-primary-foreground rounded-lg disabled:bg-secondary"
+      className="absolute bottom-2.5 right-2.5 bg-primary/80 hover:bg-primary text-primary-foreground rounded-full shadow-lg transition-all disabled:bg-secondary disabled:shadow-none"
       aria-label="Send message"
     >
       {pending ? (
@@ -50,13 +50,13 @@ function ChatMessage({ message }: { message: Message }) {
     const isModel = message.role === 'model';
     return (
         <div className={cn('flex items-start gap-4', !isModel && 'flex-row-reverse')}>
-            <Avatar className={cn('w-8 h-8 border-2', isModel ? 'border-primary/50' : 'border-secondary-foreground/50')}>
+            <Avatar className={cn('w-8 h-8 border-2 shadow-sm', isModel ? 'border-primary/50' : 'border-secondary-foreground/50')}>
                 <AvatarFallback className={cn(isModel ? 'bg-primary/20 text-primary' : 'bg-secondary text-secondary-foreground')}>
                     {isModel ? <Bot size={18}/> : <User size={18}/>}
                 </AvatarFallback>
             </Avatar>
             <div className={cn(
-                'max-w-[80%] rounded-lg px-4 py-3 text-sm shadow-md',
+                'max-w-[80%] rounded-xl px-4 py-3 text-base shadow-lg',
                 isModel ? 'bg-secondary/50 border border-border/20 text-foreground' : 'bg-primary text-primary-foreground',
             )}>
                 {typeof message.content === 'string' ? (
@@ -74,6 +74,7 @@ function ChatMessage({ message }: { message: Message }) {
 
 export function Chat() {
   const [state, formAction] = useActionState(getMioResponse, initialState);
+  const [isPending, startTransition] = useTransition();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -112,27 +113,29 @@ export function Chat() {
     const history = messages.filter(m => typeof m.content === 'string');
     formData.set('history', JSON.stringify(history));
     
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: prompt,
-    };
-    
-    const thinkingMessage: Message = {
-        id: 'thinking',
-        role: 'model',
-        content: (
-            <div className="flex items-center gap-2">
-                <div className="h-2 w-2 bg-primary rounded-full animate-pulse [animation-delay:-0.3s]" />
-                <div className="h-2 w-2 bg-primary rounded-full animate-pulse [animation-delay:-0.15s]" />
-                <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
-            </div>
-        )
-    }
-
-    setMessages(prev => [...prev, userMessage, thinkingMessage]);
+    startTransition(() => {
+      const userMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: prompt,
+      };
+      
+      const thinkingMessage: Message = {
+          id: 'thinking',
+          role: 'model',
+          content: (
+              <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 bg-primary rounded-full animate-pulse [animation-delay:-0.3s]" />
+                  <div className="h-2 w-2 bg-primary rounded-full animate-pulse [animation-delay:-0.15s]" />
+                  <div className="h-2 w-2 bg-primary rounded-full animate-pulse" />
+              </div>
+          )
+      }
+  
+      setMessages(prev => [...prev, userMessage, thinkingMessage]);
+      formAction(formData);
+    });
     formRef.current?.reset();
-    formAction(formData);
   };
 
   return (
@@ -145,12 +148,15 @@ export function Chat() {
         </div>
       </ScrollArea>
       <div className="p-4 bg-background/80 backdrop-blur-sm border-t border-primary/20">
-        <form ref={formRef} action={handleAction}>
+        <form ref={formRef} action={handleAction} onSubmit={(e) => {
+          e.preventDefault();
+          handleAction(new FormData(e.currentTarget));
+        }}>
           <div className="relative">
             <AutoSizingTextarea
                 name="prompt"
                 placeholder="Enlighten me about..."
-                className="w-full resize-none max-h-36 rounded-lg border border-input bg-secondary/50 pr-14 pl-4 py-3 text-base"
+                className="w-full resize-none max-h-36 rounded-xl border-2 border-input bg-secondary/50 pr-16 pl-4 py-3 text-base shadow-inner"
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -158,7 +164,6 @@ export function Chat() {
                     }
                 }}
             />
-            <input type="hidden" name="history" defaultValue="[]" />
             <SubmitButton />
           </div>
         </form>
