@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import React, { useEffect, useRef, useState, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { getMioResponse, type FormState } from '@/app/actions';
 import { type Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -73,7 +73,7 @@ function ChatMessage({ message }: { message: Message }) {
 }
 
 export function Chat() {
-  const [state, formAction] = useFormState(getMioResponse, initialState);
+  const [state, formAction] = useActionState(getMioResponse, initialState);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
