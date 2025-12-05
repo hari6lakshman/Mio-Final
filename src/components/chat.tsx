@@ -109,7 +109,9 @@ export function Chat() {
   
   const handleAction = (formData: FormData) => {
     const prompt = formData.get('prompt') as string;
-    if (!prompt.trim() || isPending) return;
+    if (!prompt.trim()) return;
+
+    if (isPending) return;
 
     const history = messages.filter(m => typeof m.content === 'string');
     formData.set('history', JSON.stringify(history));
@@ -156,7 +158,7 @@ export function Chat() {
           <div className="relative">
             <AutoSizingTextarea
                 name="prompt"
-                placeholder="Enlighten me about..."
+                placeholder="Feel free to share your doubt here"
                 className="w-full resize-none max-h-36 rounded-xl border-2 border-input bg-secondary/50 pr-16 pl-4 py-3 text-base shadow-inner"
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey && !isPending) {
