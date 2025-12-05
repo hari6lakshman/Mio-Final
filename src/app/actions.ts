@@ -42,11 +42,15 @@ export async function getMioResponse(
     }
     
     // 2. Highlight key concepts in the summary
-    const highlightedSummary = await highlightKeyConcepts(summaryResult.summary);
+    const highlightResult = await highlightKeyConcepts({text: summaryResult.summary});
     
+    if (!highlightResult.highlightedText) {
+        throw new Error('The AI could not highlight key concepts.');
+    }
+
     return {
       promptId: promptId,
-      mioResponse: highlightedSummary,
+      mioResponse: highlightResult.highlightedText,
       error: null,
     };
   } catch (e) {

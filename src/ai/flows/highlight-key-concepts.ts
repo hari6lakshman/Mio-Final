@@ -12,10 +12,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const HighlightKeyConceptsInputSchema = z.string().describe('The input text to highlight key concepts in.');
+const HighlightKeyConceptsInputSchema = z.object({
+  text: z.string().describe('The input text to highlight key concepts in.'),
+});
 export type HighlightKeyConceptsInput = z.infer<typeof HighlightKeyConceptsInputSchema>;
 
-const HighlightKeyConceptsOutputSchema = z.string().describe('The text with key concepts highlighted using markdown bold text.');
+const HighlightKeyConceptsOutputSchema = z.object({
+    highlightedText: z.string().describe('The text with key concepts highlighted using markdown bold text.'),
+});
 export type HighlightKeyConceptsOutput = z.infer<typeof HighlightKeyConceptsOutputSchema>;
 
 export async function highlightKeyConcepts(input: HighlightKeyConceptsInput): Promise<HighlightKeyConceptsOutput> {
@@ -28,7 +32,7 @@ const highlightKeyConceptsPrompt = ai.definePrompt({
   output: {schema: HighlightKeyConceptsOutputSchema},
   prompt: `You are an AI assistant that specializes in identifying key concepts in text and marking them with markdown-style bold text (**) to highlight them.  Your task is to process the given text and highlight the most important concepts.
 
-Text: {{{input}}}`,
+Text: {{{text}}}`,
 });
 
 const highlightKeyConceptsFlow = ai.defineFlow(
