@@ -33,7 +33,7 @@ function SubmitButton() {
       type="submit"
       size="icon"
       disabled={pending}
-      className="absolute bottom-2.5 right-2.5 bg-primary/80 hover:bg-primary text-primary-foreground rounded-full shadow-lg transition-all disabled:bg-secondary disabled:shadow-none"
+      className="absolute bottom-2.5 right-2.5 bg-primary/80 hover:bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/30 transition-all disabled:bg-secondary disabled:shadow-none"
       aria-label="Send message"
     >
       {pending ? (
@@ -57,7 +57,7 @@ function ChatMessage({ message }: { message: Message }) {
                     {isModel ? 'Mio' : 'You'}
                 </div>
                 <div className={cn(
-                    'max-w-[80%] rounded-xl px-4 py-3 text-base shadow-[0_4px_20px_hsl(var(--primary)/0.1)]',
+                    'max-w-[80%] rounded-xl px-4 py-3 text-base shadow-[0_6px_30px_hsl(var(--primary)/0.25)]',
                     isModel ? 'bg-secondary/50 border border-border/20 text-foreground' : 'bg-primary text-primary-foreground',
                 )}>
                     {typeof message.content === 'string' ? (
