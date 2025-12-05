@@ -17,7 +17,7 @@ const initialMessages: Message[] = [
   {
     id: '0',
     role: 'model',
-    content: 'Greetings. I am Mio, your personal guide to knowledge. How may I enlighten you today?',
+    content: 'Hello, Nice to meet you. Feel free to share your doubt',
   },
 ];
 
@@ -78,7 +78,6 @@ export function Chat() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const hiddenHistoryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (state.error) {
@@ -110,10 +109,8 @@ export function Chat() {
     const prompt = formData.get('prompt') as string;
     if (!prompt.trim()) return;
 
-    if (hiddenHistoryInputRef.current) {
-        const history = messages.filter(m => typeof m.content === 'string');
-        hiddenHistoryInputRef.current.value = JSON.stringify(history);
-    }
+    const history = messages.filter(m => typeof m.content === 'string');
+    formData.set('history', JSON.stringify(history));
     
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -134,7 +131,6 @@ export function Chat() {
     }
 
     setMessages(prev => [...prev, userMessage, thinkingMessage]);
-    formAction(formData);
     formRef.current?.reset();
   };
 
@@ -148,20 +144,26 @@ export function Chat() {
         </div>
       </ScrollArea>
       <div className="p-4 bg-background/80 backdrop-blur-sm border-t border-primary/20">
-        <form ref={formRef} action={handleAction} className="relative">
-          <AutoSizingTextarea
-            name="prompt"
-            placeholder="Enlighten me about..."
-            className="w-full resize-none max-h-36 rounded-lg border border-input bg-secondary/50 pr-14 pl-4 py-3 text-base"
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    formRef.current?.requestSubmit();
-                }
-            }}
-          />
-          <input type="hidden" name="history" ref={hiddenHistoryInputRef} />
-          <SubmitButton />
+        <form ref={formRef} action={formAction}>
+          <div className="relative">
+            <AutoSizingTextarea
+                name="prompt"
+                placeholder="Enlighten me about..."
+                className="w-full resize-none max-h-36 rounded-lg border border-input bg-secondary/50 pr-14 pl-4 py-3 text-base"
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const form = e.currentTarget.form;
+                        if (form) {
+                            handleAction(new FormData(form));
+                            form.requestSubmit();
+                        }
+                    }
+                }}
+            />
+            <input type="hidden" name="history" defaultValue="[]" />
+            <SubmitButton />
+          </div>
         </form>
       </div>
     </div>
