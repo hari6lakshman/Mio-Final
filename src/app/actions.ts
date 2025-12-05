@@ -1,11 +1,13 @@
 'use server';
 
 import { highlightKeyConcepts } from '@/ai/flows/highlight-key-concepts';
-import { summarizeTopic } from '@/ai/flows/summarize-topic';
+import { chat } from '@/ai/flows/chat';
 import { z } from 'zod';
+import { type Message } from '@/lib/types';
 
 const schema = z.object({
   prompt: z.string().min(1, { message: 'Please enter a message.' }),
+  history: z.string(),
 });
 
 export type FormState = {
@@ -20,6 +22,7 @@ export async function getMioResponse(
 ): Promise<FormState> {
   const validatedFields = schema.safeParse({
     prompt: formData.get('prompt'),
+    history: formData.get('history'),
   });
 
   if (!validatedFields.success) {
@@ -29,20 +32,29 @@ export async function getMioResponse(
       error: validatedFields.error.flatten().fieldErrors.prompt?.[0] || "Validation failed",
     };
   }
-
-  const prompt = validatedFields.data.prompt;
+  
+  const { prompt, history } = validatedFields.data;
   const promptId = crypto.randomUUID();
+  
+  let parsedHistory: Message[] = [];
+  try {
+    parsedHistory = JSON.parse(history);
+  } catch (e) {
+    // ignore invalid history
+  }
+
 
   try {
-    // 1. Get a summary for the user's topic
-    const summaryResult = await summarizeTopic({ topic: prompt });
+    const chatResult = await chat({
+        prompt: prompt,
+        history: parsedHistory
+    });
 
-    if (!summaryResult.summary) {
-        throw new Error('The AI could not generate a summary.');
+    if (!chatResult.response) {
+        throw new Error('The AI could not generate a response.');
     }
     
-    // 2. Highlight key concepts in the summary
-    const highlightResult = await highlightKeyConcepts({text: summaryResult.summary});
+    const highlightResult = await highlightKeyConcepts({text: chatResult.response});
     
     if (!highlightResult.highlightedText) {
         throw new Error('The AI could not highlight key concepts.');

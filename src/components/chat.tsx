@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useActionState, useTransition } from 'react';
-import { useFormStatus } from 'react-dom';
+import React, { useEffect, useRef, useState, useActionState } from 'react';
 import { getMioResponse, type FormState } from '@/app/actions';
 import { type Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -12,6 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AutoSizingTextarea } from '@/components/ui/auto-sizing-textarea';
 import { useToast } from '@/hooks/use-toast';
 import { MarkdownRenderer } from '@/components/markdown-renderer';
+import { useFormStatus } from 'react-dom';
 
 const initialMessages: Message[] = [
   {
@@ -78,7 +78,7 @@ export function Chat() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [isPending, startTransition] = useTransition();
+  const hiddenHistoryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (state.error) {
@@ -87,7 +87,6 @@ export function Chat() {
         title: 'Error',
         description: state.error,
       });
-      // remove the "thinking" message
       setMessages(prev => prev.filter(msg => msg.id !== 'thinking'));
     }
 
@@ -97,7 +96,6 @@ export function Chat() {
         role: 'model',
         content: state.mioResponse,
       };
-      // replace "thinking" message with actual response
       setMessages(prev => prev.map(msg => msg.id === 'thinking' ? mioMessage : msg));
     }
   }, [state, toast]);
@@ -107,11 +105,16 @@ export function Chat() {
         viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
     }
   }, [messages]);
-
+  
   const handleAction = (formData: FormData) => {
     const prompt = formData.get('prompt') as string;
     if (!prompt.trim()) return;
 
+    if (hiddenHistoryInputRef.current) {
+        const history = messages.filter(m => typeof m.content === 'string');
+        hiddenHistoryInputRef.current.value = JSON.stringify(history);
+    }
+    
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -131,14 +134,9 @@ export function Chat() {
     }
 
     setMessages(prev => [...prev, userMessage, thinkingMessage]);
-    
-    startTransition(() => {
-      formAction(formData);
-    });
-
+    formAction(formData);
     formRef.current?.reset();
   };
-
 
   return (
     <div className="flex flex-col h-full">
@@ -162,6 +160,7 @@ export function Chat() {
                 }
             }}
           />
+          <input type="hidden" name="history" ref={hiddenHistoryInputRef} />
           <SubmitButton />
         </form>
       </div>
