@@ -132,6 +132,7 @@ export function Chat() {
 
     setMessages(prev => [...prev, userMessage, thinkingMessage]);
     formRef.current?.reset();
+    formAction(formData);
   };
 
   return (
@@ -144,7 +145,7 @@ export function Chat() {
         </div>
       </ScrollArea>
       <div className="p-4 bg-background/80 backdrop-blur-sm border-t border-primary/20">
-        <form ref={formRef} action={formAction}>
+        <form ref={formRef} action={handleAction}>
           <div className="relative">
             <AutoSizingTextarea
                 name="prompt"
@@ -153,11 +154,7 @@ export function Chat() {
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        const form = e.currentTarget.form;
-                        if (form) {
-                            handleAction(new FormData(form));
-                            form.requestSubmit();
-                        }
+                        formRef.current?.requestSubmit();
                     }
                 }}
             />
