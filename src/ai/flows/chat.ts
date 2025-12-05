@@ -9,11 +9,10 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import {Message} from '@/lib/types';
+import {z} from 'zod';
 
 const ChatInputSchema = z.object({
-  prompt: z.string().describe('The user\'s message.'),
+  prompt: z.string().describe("The user's message."),
   history: z.array(z.object({
       role: z.enum(['user', 'model']),
       content: z.string(),
@@ -22,7 +21,7 @@ const ChatInputSchema = z.object({
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 const ChatOutputSchema = z.object({
-  response: z.string().describe('Mio\'s response to the user.'),
+  response: z.string().describe("Mio's response to the user."),
 });
 export type ChatOutput = z.infer<typeof ChatOutputSchema>;
 
@@ -30,15 +29,25 @@ export async function chat(input: ChatInput): Promise<ChatOutput> {
   return chatFlow(input);
 }
 
+// Internal schema for the prompt, which includes the isUser flag
+const PromptInputSchema = z.object({
+    prompt: z.string(),
+    history: z.array(z.object({
+        role: z.enum(['user', 'model']),
+        content: z.string(),
+        isUser: z.boolean(), // The new flag
+    })),
+});
+
 const chatPrompt = ai.definePrompt({
   name: 'chatPrompt',
-  input: {schema: ChatInputSchema},
+  input: {schema: PromptInputSchema}, // Use the internal schema
   output: {schema: ChatOutputSchema},
   prompt: `You are Mio, a luxurious and intelligent AI educational assistant. Your personality is sophisticated, elegant, and knowledgeable. Engage in a natural, flowing conversation. Provide clear and concise explanations when asked, but your primary goal is to be a helpful and engaging conversational partner.
 
 Here is the chat history so far:
 {{#each history}}
-  {{#if (this.role === 'user')}}
+  {{#if this.isUser}}
     User: {{{this.content}}}
   {{else}}
     Mio: {{{this.content}}}
@@ -58,7 +67,16 @@ const chatFlow = ai.defineFlow(
     outputSchema: ChatOutputSchema,
   },
   async input => {
-    const {output} = await chatPrompt(input);
+    // Process history to add the isUser flag
+    const processedHistory = input.history.map(message => ({
+      ...message,
+      isUser: message.role === 'user',
+    }));
+    
+    const {output} = await chatPrompt({
+        prompt: input.prompt,
+        history: processedHistory,
+    });
     return output!;
   }
 );
