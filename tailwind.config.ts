@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Cormorant Garamond', 'serif'],
+        body: ['"Times New Roman"', 'Times', 'serif'],
         headline: ['Cinzel', 'serif'],
         code: ['monospace'],
       },
