@@ -9,7 +9,7 @@ export function MarkdownRenderer({ content, boldColorClass }: MarkdownRendererPr
   const parts = content.split(/(\*\*.*?\*\*)/g);
 
   return (
-    <div>
+    <div className="whitespace-pre-wrap">
       {parts.map((part, index) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return (
@@ -18,7 +18,7 @@ export function MarkdownRenderer({ content, boldColorClass }: MarkdownRendererPr
             </strong>
           );
         }
-        return <React.Fragment key={index}>{part.replace(/\n/g, ' ')}</React.Fragment>;
+        return <React.Fragment key={index}>{part}</React.Fragment>;
       })}
     </div>
   );
