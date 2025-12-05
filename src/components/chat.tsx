@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useActionState, useTransition } from 'react';
+import React, { useEffect, useRef, useState, useActionState } from 'react';
 import { getMioResponse, type FormState } from '@/app/actions';
 import { type Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -53,7 +53,7 @@ function ChatMessage({ message }: { message: Message }) {
                 'flex flex-col gap-1.5',
                 !isModel && 'items-end',
             )}>
-                 <div className="text-xs font-bold text-muted-foreground px-1">
+                 <div className="text-xs font-bold text-primary px-1">
                     {isModel ? 'Mio' : 'You'}
                 </div>
                 <div className={cn(
@@ -148,8 +148,7 @@ export function Chat() {
       </ScrollArea>
       <div className="p-4 bg-background/80 backdrop-blur-sm border-t border-primary/20">
         <form ref={formRef} action={handleAction} onSubmit={(e) => {
-          // This allows enter to submit, but also allows the form action to be called directly
-          if ((e.nativeEvent as SubmitEvent).submitter) {
+          if (!isPending && (e.nativeEvent as SubmitEvent).submitter) {
             e.preventDefault();
             handleAction(new FormData(e.currentTarget));
           }
@@ -160,7 +159,7 @@ export function Chat() {
                 placeholder="Enlighten me about..."
                 className="w-full resize-none max-h-36 rounded-xl border-2 border-input bg-secondary/50 pr-16 pl-4 py-3 text-base shadow-inner"
                 onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === 'Enter' && !e.shiftKey && !isPending) {
                         e.preventDefault();
                         formRef.current?.requestSubmit();
                     }
