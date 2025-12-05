@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useActionState } from 'react';
+import React, { useEffect, useRef, useState, useActionState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { getMioResponse, type FormState } from '@/app/actions';
 import { type Message } from '@/lib/types';
@@ -78,6 +78,7 @@ export function Chat() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     if (state.error) {
@@ -107,11 +108,8 @@ export function Chat() {
     }
   }, [messages]);
 
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+  const handleAction = (formData: FormData) => {
     const prompt = formData.get('prompt') as string;
-
     if (!prompt.trim()) return;
 
     const userMessage: Message = {
@@ -133,9 +131,14 @@ export function Chat() {
     }
 
     setMessages(prev => [...prev, userMessage, thinkingMessage]);
-    formAction(formData);
+    
+    startTransition(() => {
+      formAction(formData);
+    });
+
     formRef.current?.reset();
   };
+
 
   return (
     <div className="flex flex-col h-full">
@@ -147,7 +150,7 @@ export function Chat() {
         </div>
       </ScrollArea>
       <div className="p-4 bg-background/80 backdrop-blur-sm border-t border-primary/20">
-        <form ref={formRef} onSubmit={handleFormSubmit} className="relative">
+        <form ref={formRef} action={handleAction} className="relative">
           <AutoSizingTextarea
             name="prompt"
             placeholder="Enlighten me about..."
